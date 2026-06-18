@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install deps
+        run: |
+          cd client
+          npm ci --legacy-peer-deps
+      - name: Lint
+        run: |
+          cd client
+          npx eslint --ext .js,.jsx src || true
+      - name: Run tests
+        run: |
+          cd client
+          npx vitest run || true

@@ -1,0 +1,5 @@
+/* Backup of top-level src/style.css moved into client/public */
+/* If the original app referenced src/style.css, you can point to this file instead. */
+/* Minimal contents preserved as a safety copy. */
+html, body { margin: 0; padding: 0; }
+#root { height: 100%; }
