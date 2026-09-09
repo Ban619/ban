@@ -30,7 +30,7 @@ namespace Essentials.Commands
                     break;
 
                 case "tanaw":
-                    Tanaw(args);
+                    Tanaw(args, ops);
                     break;
 
                 case "familytree":
@@ -47,6 +47,10 @@ namespace Essentials.Commands
 
                 case "balhin":
                     Balhin(args);
+                    break;
+
+                case "del":
+                    Del(args);
                     break;
 
                 case "tabang":
@@ -200,9 +204,29 @@ namespace Essentials.Commands
         }
 
         private static void Tanaw(
-            List<string> args)
+            List<string> args,
+            List<string> ops)
         {
             string path;
+            bool showHidden = false;
+            bool detailed = false;
+
+            foreach (string option in ops)
+            {
+                if (option.Equals(
+                    "-a",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    showHidden = true;
+                }
+
+                if (option.Equals(
+                    "-l",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    detailed = true;
+                }
+            }
 
             if (args.Count == 0)
             {
@@ -231,29 +255,85 @@ namespace Essentials.Commands
                     return;
                 }
 
-                string[] directories =
-                    Directory.GetDirectories(path);
+                DirectoryInfo directory =
+                    new DirectoryInfo(path);
 
-                string[] files =
-                    Directory.GetFiles(path);
+                DirectoryInfo[] directories =
+                    directory.GetDirectories();
+
+                FileInfo[] files =
+                    directory.GetFiles();
+
+                List<DirectoryInfo> visibleDirectories =
+                    new List<DirectoryInfo>();
+
+                List<FileInfo> visibleFiles =
+                    new List<FileInfo>();
+
+                foreach (DirectoryInfo item in directories)
+                {
+                    if (showHidden ||
+                        !IsHidden(item))
+                    {
+                        visibleDirectories.Add(item);
+                    }
+                }
+
+                foreach (FileInfo item in files)
+                {
+                    if (showHidden ||
+                        !IsHidden(item))
+                    {
+                        visibleFiles.Add(item);
+                    }
+                }
 
                 Console.WriteLine();
 
                 Console.ForegroundColor =
                     ConsoleColor.Cyan;
 
-                Console.WriteLine("Folders:");
+                Console.WriteLine(
+                    $"Directory: {directory.FullName}"
+                );
 
                 Console.ResetColor();
 
-                foreach (string directory in directories)
+                Console.WriteLine();
+
+                Console.ForegroundColor =
+                    ConsoleColor.Cyan;
+
+                Console.WriteLine(
+                    "Folders:"
+                );
+
+                Console.ResetColor();
+
+                if (visibleDirectories.Count == 0)
+                {
+                    Console.WriteLine(
+                        "  (none)"
+                    );
+                }
+
+                foreach (DirectoryInfo item in visibleDirectories)
                 {
                     Console.ForegroundColor =
                         ConsoleColor.Blue;
 
-                    Console.WriteLine(
-                        $"  {Path.GetFileName(directory)}"
-                    );
+                    if (detailed)
+                    {
+                        Console.WriteLine(
+                            $"  {item.Name,-30} <DIR>    {item.LastWriteTime}"
+                        );
+                    }
+                    else
+                    {
+                        Console.WriteLine(
+                            $"  {item.Name}"
+                        );
+                    }
 
                     Console.ResetColor();
                 }
@@ -263,21 +343,50 @@ namespace Essentials.Commands
                 Console.ForegroundColor =
                     ConsoleColor.Cyan;
 
-                Console.WriteLine("Files:");
+                Console.WriteLine(
+                    "Files:"
+                );
 
                 Console.ResetColor();
 
-                foreach (string file in files)
+                if (visibleFiles.Count == 0)
+                {
+                    Console.WriteLine(
+                        "  (none)"
+                    );
+                }
+
+                foreach (FileInfo item in visibleFiles)
                 {
                     Console.ForegroundColor =
                         ConsoleColor.White;
 
-                    Console.WriteLine(
-                        $"  {Path.GetFileName(file)}"
-                    );
+                    if (detailed)
+                    {
+                        Console.WriteLine(
+                            $"  {item.Name,-30} {FormatSize(item.Length),10}    {item.LastWriteTime}"
+                        );
+                    }
+                    else
+                    {
+                        Console.WriteLine(
+                            $"  {item.Name}"
+                        );
+                    }
 
                     Console.ResetColor();
                 }
+
+                Console.WriteLine();
+
+                Console.ForegroundColor =
+                    ConsoleColor.DarkGray;
+
+                Console.WriteLine(
+                    $"  {visibleDirectories.Count} folder(s), {visibleFiles.Count} file(s)"
+                );
+
+                Console.ResetColor();
 
                 Console.WriteLine();
             }
@@ -303,6 +412,31 @@ namespace Essentials.Commands
 
                 Console.ResetColor();
             }
+        }
+
+        private static bool IsHidden(
+            FileSystemInfo item)
+        {
+            return (
+                item.Attributes &
+                FileAttributes.Hidden
+            ) != 0;
+        }
+
+        private static string FormatSize(
+            long bytes)
+        {
+            if (bytes < 1024)
+                return $"{bytes} B";
+
+            if (bytes < 1024 * 1024)
+                return $"{bytes / 1024.0:F1} KB";
+
+            if (bytes < 1024L * 1024L * 1024L)
+                return $"{bytes / (1024.0 * 1024.0):F1} MB";
+
+            return
+                $"{bytes / (1024.0 * 1024.0 * 1024.0):F1} GB";
         }
 
         private static void FamilyTree(
@@ -526,50 +660,31 @@ namespace Essentials.Commands
 
             try
             {
-                if (!File.Exists(source))
+                if (File.Exists(source))
                 {
-                    Console.ForegroundColor =
-                        ConsoleColor.Red;
-
-                    Console.WriteLine(
-                        $"kopya: file not found: {source}"
+                    CopyFile(
+                        source,
+                        destination
                     );
-
-                    Console.ResetColor();
 
                     return;
                 }
 
-                if (Directory.Exists(destination))
+                if (Directory.Exists(source))
                 {
-                    destination =
-                        Path.Combine(
-                            destination,
-                            Path.GetFileName(source)
-                        );
+                    CopyDirectory(
+                        source,
+                        destination
+                    );
+
+                    return;
                 }
 
-                File.Copy(
-                    source,
-                    destination
-                );
-
-                Console.ForegroundColor =
-                    ConsoleColor.Green;
-
-                Console.WriteLine(
-                    $"Copied: {source} -> {destination}"
-                );
-
-                Console.ResetColor();
-            }
-            catch (IOException)
-            {
                 Console.ForegroundColor =
                     ConsoleColor.Red;
 
                 Console.WriteLine(
-                    $"kopya: destination already exists or cannot be used: {destination}"
+                    $"kopya: source not found: {source}"
                 );
 
                 Console.ResetColor();
@@ -585,6 +700,17 @@ namespace Essentials.Commands
 
                 Console.ResetColor();
             }
+            catch (IOException ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"kopya: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
             catch (Exception ex)
             {
                 Console.ForegroundColor =
@@ -596,6 +722,121 @@ namespace Essentials.Commands
 
                 Console.ResetColor();
             }
+        }
+
+        private static void CopyFile(
+            string source,
+            string destination)
+        {
+            if (Directory.Exists(destination))
+            {
+                destination =
+                    Path.Combine(
+                        destination,
+                        Path.GetFileName(source)
+                    );
+            }
+
+            if (File.Exists(destination))
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Yellow;
+
+                Console.WriteLine(
+                    $"kopya: destination already exists: {destination}"
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            File.Copy(
+                source,
+                destination
+            );
+
+            Console.ForegroundColor =
+                ConsoleColor.Green;
+
+            Console.WriteLine(
+                $"Copied: {source} -> {destination}"
+            );
+
+            Console.ResetColor();
+        }
+
+        private static void CopyDirectory(
+            string source,
+            string destination)
+        {
+            DirectoryInfo sourceInfo =
+                new DirectoryInfo(source);
+
+            if (Directory.Exists(destination))
+            {
+                destination =
+                    Path.Combine(
+                        destination,
+                        sourceInfo.Name
+                    );
+            }
+
+            if (Directory.Exists(destination))
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Yellow;
+
+                Console.WriteLine(
+                    $"kopya: destination already exists: {destination}"
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            Directory.CreateDirectory(
+                destination
+            );
+
+            foreach (FileInfo file in sourceInfo.GetFiles())
+            {
+                string target =
+                    Path.Combine(
+                        destination,
+                        file.Name
+                    );
+
+                File.Copy(
+                    file.FullName,
+                    target
+                );
+            }
+
+            foreach (DirectoryInfo directory
+                in sourceInfo.GetDirectories())
+            {
+                string target =
+                    Path.Combine(
+                        destination,
+                        directory.Name
+                    );
+
+                CopyDirectory(
+                    directory.FullName,
+                    target
+                );
+            }
+
+            Console.ForegroundColor =
+                ConsoleColor.Green;
+
+            Console.WriteLine(
+                $"Copied directory: {source} -> {destination}"
+            );
+
+            Console.ResetColor();
         }
 
         private static void Balhin(
@@ -629,50 +870,31 @@ namespace Essentials.Commands
 
             try
             {
-                if (!File.Exists(source))
+                if (File.Exists(source))
                 {
-                    Console.ForegroundColor =
-                        ConsoleColor.Red;
-
-                    Console.WriteLine(
-                        $"balhin: file not found: {source}"
+                    MoveFile(
+                        source,
+                        destination
                     );
-
-                    Console.ResetColor();
 
                     return;
                 }
 
-                if (Directory.Exists(destination))
+                if (Directory.Exists(source))
                 {
-                    destination =
-                        Path.Combine(
-                            destination,
-                            Path.GetFileName(source)
-                        );
+                    MoveDirectory(
+                        source,
+                        destination
+                    );
+
+                    return;
                 }
 
-                File.Move(
-                    source,
-                    destination
-                );
-
-                Console.ForegroundColor =
-                    ConsoleColor.Green;
-
-                Console.WriteLine(
-                    $"Moved: {source} -> {destination}"
-                );
-
-                Console.ResetColor();
-            }
-            catch (IOException)
-            {
                 Console.ForegroundColor =
                     ConsoleColor.Red;
 
                 Console.WriteLine(
-                    $"balhin: destination already exists or cannot be used: {destination}"
+                    $"balhin: source not found: {source}"
                 );
 
                 Console.ResetColor();
@@ -688,6 +910,17 @@ namespace Essentials.Commands
 
                 Console.ResetColor();
             }
+            catch (IOException ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"balhin: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
             catch (Exception ex)
             {
                 Console.ForegroundColor =
@@ -695,6 +928,196 @@ namespace Essentials.Commands
 
                 Console.WriteLine(
                     $"balhin: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
+        private static void MoveFile(
+            string source,
+            string destination)
+        {
+            if (Directory.Exists(destination))
+            {
+                destination =
+                    Path.Combine(
+                        destination,
+                        Path.GetFileName(source)
+                    );
+            }
+
+            if (File.Exists(destination) ||
+                Directory.Exists(destination))
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Yellow;
+
+                Console.WriteLine(
+                    $"balhin: destination already exists: {destination}"
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            File.Move(
+                source,
+                destination
+            );
+
+            Console.ForegroundColor =
+                ConsoleColor.Green;
+
+            Console.WriteLine(
+                $"Moved: {source} -> {destination}"
+            );
+
+            Console.ResetColor();
+        }
+
+        private static void MoveDirectory(
+            string source,
+            string destination)
+        {
+            DirectoryInfo sourceInfo =
+                new DirectoryInfo(source);
+
+            if (Directory.Exists(destination))
+            {
+                destination =
+                    Path.Combine(
+                        destination,
+                        sourceInfo.Name
+                    );
+            }
+
+            if (Directory.Exists(destination) ||
+                File.Exists(destination))
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Yellow;
+
+                Console.WriteLine(
+                    $"balhin: destination already exists: {destination}"
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            Directory.Move(
+                source,
+                destination
+            );
+
+            Console.ForegroundColor =
+                ConsoleColor.Green;
+
+            Console.WriteLine(
+                $"Moved directory: {source} -> {destination}"
+            );
+
+            Console.ResetColor();
+        }
+
+        private static void Del(
+            List<string> args)
+        {
+            if (args.Count == 0)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "del: missing file or directory."
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            string path =
+                string.Join(" ", args);
+
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+
+                    Console.ForegroundColor =
+                        ConsoleColor.Green;
+
+                    Console.WriteLine(
+                        $"Deleted: {path}"
+                    );
+
+                    Console.ResetColor();
+
+                    return;
+                }
+
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(
+                        path,
+                        true
+                    );
+
+                    Console.ForegroundColor =
+                        ConsoleColor.Green;
+
+                    Console.WriteLine(
+                        $"Deleted directory: {path}"
+                    );
+
+                    Console.ResetColor();
+
+                    return;
+                }
+
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"del: file or directory not found: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "del: access denied."
+                );
+
+                Console.ResetColor();
+            }
+            catch (IOException ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"del: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"del: {ex.Message}"
                 );
 
                 Console.ResetColor();
@@ -736,11 +1159,15 @@ namespace Essentials.Commands
                 );
 
                 Console.WriteLine(
-                    "  kopya        Copy a file"
+                    "  kopya        Copy files and directories"
                 );
 
                 Console.WriteLine(
-                    "  balhin       Move or rename a file"
+                    "  balhin       Move or rename files and directories"
+                );
+
+                Console.WriteLine(
+                    "  del          Delete files and directories"
                 );
 
                 Console.WriteLine(
@@ -786,17 +1213,6 @@ namespace Essentials.Commands
                         "  cd <directory>"
                     );
                     Console.WriteLine();
-                    Console.WriteLine("Examples:");
-                    Console.WriteLine(
-                        "  cd .."
-                    );
-                    Console.WriteLine(
-                        "  cd Documents"
-                    );
-                    Console.WriteLine(
-                        "  cd C:\\Users"
-                    );
-                    Console.WriteLine();
                     break;
 
                 case "himo":
@@ -808,17 +1224,6 @@ namespace Essentials.Commands
                     Console.WriteLine("Usage:");
                     Console.WriteLine(
                         "  himo <directory>"
-                    );
-                    Console.WriteLine();
-                    Console.WriteLine("Examples:");
-                    Console.WriteLine(
-                        "  himo test"
-                    );
-                    Console.WriteLine(
-                        "  himo Documents"
-                    );
-                    Console.WriteLine(
-                        "  himo \"My Folder\""
                     );
                     Console.WriteLine();
                     break;
@@ -837,12 +1242,26 @@ namespace Essentials.Commands
                         "  tanaw <directory>"
                     );
                     Console.WriteLine();
+                    Console.WriteLine("Options:");
+                    Console.WriteLine(
+                        "  -a    Show hidden files"
+                    );
+                    Console.WriteLine(
+                        "  -l    Show detailed information"
+                    );
+                    Console.WriteLine();
                     Console.WriteLine("Examples:");
                     Console.WriteLine(
                         "  tanaw"
                     );
                     Console.WriteLine(
-                        "  tanaw docs"
+                        "  tanaw -a"
+                    );
+                    Console.WriteLine(
+                        "  tanaw -l"
+                    );
+                    Console.WriteLine(
+                        "  tanaw -a -l"
                     );
                     Console.WriteLine();
                     break;
@@ -861,14 +1280,6 @@ namespace Essentials.Commands
                         "  familytree <directory>"
                     );
                     Console.WriteLine();
-                    Console.WriteLine("Examples:");
-                    Console.WriteLine(
-                        "  familytree"
-                    );
-                    Console.WriteLine(
-                        "  familytree docs"
-                    );
-                    Console.WriteLine();
                     break;
 
                 case "igna":
@@ -882,20 +1293,12 @@ namespace Essentials.Commands
                         "  igna <text>"
                     );
                     Console.WriteLine();
-                    Console.WriteLine("Examples:");
-                    Console.WriteLine(
-                        "  igna Hello world"
-                    );
-                    Console.WriteLine(
-                        "  igna Ban is running"
-                    );
-                    Console.WriteLine();
                     break;
 
                 case "kopya":
                     Console.WriteLine();
                     Console.WriteLine(
-                        "kopya - Copy a file"
+                        "kopya - Copy files and directories"
                     );
                     Console.WriteLine();
                     Console.WriteLine("Usage:");
@@ -910,13 +1313,16 @@ namespace Essentials.Commands
                     Console.WriteLine(
                         "  kopya test.txt docs"
                     );
+                    Console.WriteLine(
+                        "  kopya folder1 folder2"
+                    );
                     Console.WriteLine();
                     break;
 
                 case "balhin":
                     Console.WriteLine();
                     Console.WriteLine(
-                        "balhin - Move or rename a file"
+                        "balhin - Move or rename files and directories"
                     );
                     Console.WriteLine();
                     Console.WriteLine("Usage:");
@@ -931,6 +1337,30 @@ namespace Essentials.Commands
                     Console.WriteLine(
                         "  balhin old.txt new.txt"
                     );
+                    Console.WriteLine(
+                        "  balhin folder1 folder2"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "del":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "del - Delete files and directories"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  del <file-or-directory>"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Examples:");
+                    Console.WriteLine(
+                        "  del test.txt"
+                    );
+                    Console.WriteLine(
+                        "  del folder"
+                    );
                     Console.WriteLine();
                     break;
 
@@ -938,11 +1368,6 @@ namespace Essentials.Commands
                     Console.WriteLine();
                     Console.WriteLine(
                         "dinako - Clear the screen"
-                    );
-                    Console.WriteLine();
-                    Console.WriteLine("Usage:");
-                    Console.WriteLine(
-                        "  dinako"
                     );
                     Console.WriteLine();
                     break;
@@ -953,22 +1378,12 @@ namespace Essentials.Commands
                         "oras - Show the current date and time"
                     );
                     Console.WriteLine();
-                    Console.WriteLine("Usage:");
-                    Console.WriteLine(
-                        "  oras"
-                    );
-                    Console.WriteLine();
                     break;
 
                 case "ambot":
                     Console.WriteLine();
                     Console.WriteLine(
                         "ambot - Test arguments and options"
-                    );
-                    Console.WriteLine();
-                    Console.WriteLine("Usage:");
-                    Console.WriteLine(
-                        "  ambot <arguments> <options>"
                     );
                     Console.WriteLine();
                     break;
@@ -979,25 +1394,12 @@ namespace Essentials.Commands
                         "tabang - Show available commands"
                     );
                     Console.WriteLine();
-                    Console.WriteLine("Usage:");
-                    Console.WriteLine(
-                        "  tabang"
-                    );
-                    Console.WriteLine(
-                        "  tabang <command>"
-                    );
-                    Console.WriteLine();
                     break;
 
                 case "exit":
                     Console.WriteLine();
                     Console.WriteLine(
                         "exit - Exit Ban"
-                    );
-                    Console.WriteLine();
-                    Console.WriteLine("Usage:");
-                    Console.WriteLine(
-                        "  exit"
                     );
                     Console.WriteLine();
                     break;
