@@ -1,0 +1,30 @@
+           Architecture
+
+                 USER
+                  │
+                  ▼
+              editor.cs
+                  │
+       ┌──────────┴──────────┐
+       │                     │
+   keyboard              highlighting
+       │                     │
+       ▼                     ▼
+  Shift/Ctrl/etc.       colors
+       │
+       ▼
+                ban.cs
+                  │
+                  ▼
+               com.cs
+                  │
+          parse the input
+                  │
+       ┌──────────┼──────────┐
+       ▼          ▼          ▼
+    command    arguments   options
+       │          │          │
+       └──────────┴──────────┘
+                  │
+                  ▼
+           gamitonon.cs

@@ -1,0 +1,14 @@
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\bin\Debug\net10.0\Y.exe
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\bin\Debug\net10.0\Y.deps.json
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\bin\Debug\net10.0\Y.runtimeconfig.json
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\bin\Debug\net10.0\Y.dll
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\bin\Debug\net10.0\Y.pdb
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\obj\Debug\net10.0\Y.GeneratedMSBuildEditorConfig.editorconfig
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\obj\Debug\net10.0\Y.AssemblyInfoInputs.cache
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\obj\Debug\net10.0\Y.AssemblyInfo.cs
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\obj\Debug\net10.0\Y.csproj.CoreCompileInputs.cache
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\obj\Debug\net10.0\Y.dll
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\obj\Debug\net10.0\refint\Y.dll
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\obj\Debug\net10.0\Y.pdb
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\obj\Debug\net10.0\Y.genruntimeconfig.cache
+D:\Users\Admin\Desktop\externalism\Projects\E\Y\obj\Debug\net10.0\ref\Y.dll
