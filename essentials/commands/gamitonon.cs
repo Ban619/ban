@@ -37,6 +37,14 @@ namespace Essentials.Commands
                     Igna(args);
                     break;
 
+                case "kopya":
+                    Kopya(args);
+                    break;
+
+                case "balhin":
+                    Balhin(args);
+                    break;
+
                 case "tabang":
                     Tabang(args);
                     break;
@@ -303,6 +311,210 @@ namespace Essentials.Commands
             );
         }
 
+        private static void Kopya(
+            List<string> args)
+        {
+            if (args.Count < 2)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "kopya: source and destination are required."
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            string source = args[0];
+
+            string destination =
+                string.Join(
+                    " ",
+                    args.GetRange(
+                        1,
+                        args.Count - 1
+                    )
+                );
+
+            try
+            {
+                if (!File.Exists(source))
+                {
+                    Console.ForegroundColor =
+                        ConsoleColor.Red;
+
+                    Console.WriteLine(
+                        $"kopya: file not found: {source}"
+                    );
+
+                    Console.ResetColor();
+
+                    return;
+                }
+
+                if (Directory.Exists(destination))
+                {
+                    destination =
+                        Path.Combine(
+                            destination,
+                            Path.GetFileName(source)
+                        );
+                }
+
+                File.Copy(
+                    source,
+                    destination
+                );
+
+                Console.ForegroundColor =
+                    ConsoleColor.Green;
+
+                Console.WriteLine(
+                    $"Copied: {source} -> {destination}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (IOException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"kopya: destination already exists or cannot be used: {destination}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "kopya: access denied."
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"kopya: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
+        private static void Balhin(
+            List<string> args)
+        {
+            if (args.Count < 2)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "balhin: source and destination are required."
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            string source = args[0];
+
+            string destination =
+                string.Join(
+                    " ",
+                    args.GetRange(
+                        1,
+                        args.Count - 1
+                    )
+                );
+
+            try
+            {
+                if (!File.Exists(source))
+                {
+                    Console.ForegroundColor =
+                        ConsoleColor.Red;
+
+                    Console.WriteLine(
+                        $"balhin: file not found: {source}"
+                    );
+
+                    Console.ResetColor();
+
+                    return;
+                }
+
+                if (Directory.Exists(destination))
+                {
+                    destination =
+                        Path.Combine(
+                            destination,
+                            Path.GetFileName(source)
+                        );
+                }
+
+                File.Move(
+                    source,
+                    destination
+                );
+
+                Console.ForegroundColor =
+                    ConsoleColor.Green;
+
+                Console.WriteLine(
+                    $"Moved: {source} -> {destination}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (IOException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"balhin: destination already exists or cannot be used: {destination}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "balhin: access denied."
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"balhin: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
         private static void Tabang(
             List<string> args)
         {
@@ -329,6 +541,14 @@ namespace Essentials.Commands
 
                 Console.WriteLine(
                     "  igna     Print text to the console"
+                );
+
+                Console.WriteLine(
+                    "  kopya    Copy a file"
+                );
+
+                Console.WriteLine(
+                    "  balhin   Move or rename a file"
                 );
 
                 Console.WriteLine(
@@ -452,6 +672,48 @@ namespace Essentials.Commands
                     );
                     Console.WriteLine(
                         "  igna Ban is running"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "kopya":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "kopya - Copy a file"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  kopya <source> <destination>"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Examples:");
+                    Console.WriteLine(
+                        "  kopya test.txt backup.txt"
+                    );
+                    Console.WriteLine(
+                        "  kopya test.txt docs"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "balhin":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "balhin - Move or rename a file"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  balhin <source> <destination>"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Examples:");
+                    Console.WriteLine(
+                        "  balhin test.txt docs"
+                    );
+                    Console.WriteLine(
+                        "  balhin old.txt new.txt"
                     );
                     Console.WriteLine();
                     break;
