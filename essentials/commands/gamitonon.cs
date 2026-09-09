@@ -53,8 +53,20 @@ namespace Essentials.Commands
                     Del(args);
                     break;
 
+                case "basaha":
+                    Basaha(args, ops);
+                    break;
+
+                case "history":
+                    History();
+                    break;
+
                 case "tabang":
                     Tabang(args);
+                    break;
+
+                case "bersyon":
+                    Bersyon();
                     break;
 
                 case "ambot":
@@ -208,6 +220,7 @@ namespace Essentials.Commands
             List<string> ops)
         {
             string path;
+
             bool showHidden = false;
             bool detailed = false;
 
@@ -272,8 +285,7 @@ namespace Essentials.Commands
 
                 foreach (DirectoryInfo item in directories)
                 {
-                    if (showHidden ||
-                        !IsHidden(item))
+                    if (showHidden || !IsHidden(item))
                     {
                         visibleDirectories.Add(item);
                     }
@@ -281,8 +293,7 @@ namespace Essentials.Commands
 
                 foreach (FileInfo item in files)
                 {
-                    if (showHidden ||
-                        !IsHidden(item))
+                    if (showHidden || !IsHidden(item))
                     {
                         visibleFiles.Add(item);
                     }
@@ -317,7 +328,8 @@ namespace Essentials.Commands
                     );
                 }
 
-                foreach (DirectoryInfo item in visibleDirectories)
+                foreach (DirectoryInfo item
+                    in visibleDirectories)
                 {
                     Console.ForegroundColor =
                         ConsoleColor.Blue;
@@ -356,7 +368,8 @@ namespace Essentials.Commands
                     );
                 }
 
-                foreach (FileInfo item in visibleFiles)
+                foreach (FileInfo item
+                    in visibleFiles)
                 {
                     Console.ForegroundColor =
                         ConsoleColor.White;
@@ -432,8 +445,12 @@ namespace Essentials.Commands
             if (bytes < 1024 * 1024)
                 return $"{bytes / 1024.0:F1} KB";
 
-            if (bytes < 1024L * 1024L * 1024L)
-                return $"{bytes / (1024.0 * 1024.0):F1} MB";
+            if (bytes <
+                1024L * 1024L * 1024L)
+            {
+                return
+                    $"{bytes / (1024.0 * 1024.0):F1} MB";
+            }
 
             return
                 $"{bytes / (1024.0 * 1024.0 * 1024.0):F1} GB";
@@ -551,16 +568,15 @@ namespace Essentials.Commands
 
             int current = 0;
 
-            foreach (DirectoryInfo child in directories)
+            foreach (DirectoryInfo child
+                in directories)
             {
                 current++;
 
                 bool last =
                     current == total;
 
-                Console.Write(
-                    indent
-                );
+                Console.Write(indent);
 
                 Console.Write(
                     last
@@ -587,16 +603,15 @@ namespace Essentials.Commands
                 );
             }
 
-            foreach (FileInfo file in files)
+            foreach (FileInfo file
+                in files)
             {
                 current++;
 
                 bool last =
                     current == total;
 
-                Console.Write(
-                    indent
-                );
+                Console.Write(indent);
 
                 Console.Write(
                     last
@@ -800,7 +815,8 @@ namespace Essentials.Commands
                 destination
             );
 
-            foreach (FileInfo file in sourceInfo.GetFiles())
+            foreach (FileInfo file
+                in sourceInfo.GetFiles())
             {
                 string target =
                     Path.Combine(
@@ -1124,6 +1140,157 @@ namespace Essentials.Commands
             }
         }
 
+        private static void Basaha(
+            List<string> args,
+            List<string> ops)
+        {
+            if (args.Count == 0)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "basaha: missing file name."
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            string path =
+                string.Join(" ", args);
+
+            bool lineNumbers = false;
+
+            foreach (string option in ops)
+            {
+                if (option.Equals(
+                    "-n",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    lineNumbers = true;
+                }
+            }
+
+            if (!File.Exists(path))
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"basaha: file not found: {path}"
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            try
+            {
+                string[] lines =
+                    File.ReadAllLines(path);
+
+                for (int i = 0;
+                    i < lines.Length;
+                    i++)
+                {
+                    if (lineNumbers)
+                    {
+                        Console.ForegroundColor =
+                            ConsoleColor.DarkGray;
+
+                        Console.Write(
+                            $"{i + 1,4} | "
+                        );
+
+                        Console.ResetColor();
+                    }
+
+                    Console.WriteLine(
+                        lines[i]
+                    );
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"basaha: access denied: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (IOException ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"basaha: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"basaha: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
+        private static void History()
+        {
+            List<string> history =
+                Essentials.Input.editour.GetHistory();
+
+            if (history.Count == 0)
+            {
+                Console.WriteLine(
+                    "No command history."
+                );
+
+                return;
+            }
+
+            for (int i = 0;
+                i < history.Count;
+                i++)
+            {
+                Console.WriteLine(
+                    $"  {i + 1,3}  {history[i]}"
+                );
+            }
+        }
+
+        private static void Bersyon()
+        {
+            Console.ForegroundColor =
+                ConsoleColor.Cyan;
+
+            Console.WriteLine();
+            Console.WriteLine(
+                "Ban Command Line"
+            );
+
+            Console.WriteLine(
+                "Version 0.1.0"
+            );
+
+            Console.WriteLine();
+
+            Console.ResetColor();
+        }
+
         private static void Tabang(
             List<string> args)
         {
@@ -1171,6 +1338,14 @@ namespace Essentials.Commands
                 );
 
                 Console.WriteLine(
+                    "  basaha       Read a file"
+                );
+
+                Console.WriteLine(
+                    "  history      Show command history"
+                );
+
+                Console.WriteLine(
                     "  dinako       Clear the screen"
                 );
 
@@ -1184,6 +1359,10 @@ namespace Essentials.Commands
 
                 Console.WriteLine(
                     "  tabang       Show available commands"
+                );
+
+                Console.WriteLine(
+                    "  bersyon      Show Ban version information"
                 );
 
                 Console.WriteLine(
@@ -1250,20 +1429,6 @@ namespace Essentials.Commands
                         "  -l    Show detailed information"
                     );
                     Console.WriteLine();
-                    Console.WriteLine("Examples:");
-                    Console.WriteLine(
-                        "  tanaw"
-                    );
-                    Console.WriteLine(
-                        "  tanaw -a"
-                    );
-                    Console.WriteLine(
-                        "  tanaw -l"
-                    );
-                    Console.WriteLine(
-                        "  tanaw -a -l"
-                    );
-                    Console.WriteLine();
                     break;
 
                 case "familytree":
@@ -1306,17 +1471,6 @@ namespace Essentials.Commands
                         "  kopya <source> <destination>"
                     );
                     Console.WriteLine();
-                    Console.WriteLine("Examples:");
-                    Console.WriteLine(
-                        "  kopya test.txt backup.txt"
-                    );
-                    Console.WriteLine(
-                        "  kopya test.txt docs"
-                    );
-                    Console.WriteLine(
-                        "  kopya folder1 folder2"
-                    );
-                    Console.WriteLine();
                     break;
 
                 case "balhin":
@@ -1328,17 +1482,6 @@ namespace Essentials.Commands
                     Console.WriteLine("Usage:");
                     Console.WriteLine(
                         "  balhin <source> <destination>"
-                    );
-                    Console.WriteLine();
-                    Console.WriteLine("Examples:");
-                    Console.WriteLine(
-                        "  balhin test.txt docs"
-                    );
-                    Console.WriteLine(
-                        "  balhin old.txt new.txt"
-                    );
-                    Console.WriteLine(
-                        "  balhin folder1 folder2"
                     );
                     Console.WriteLine();
                     break;
@@ -1354,12 +1497,38 @@ namespace Essentials.Commands
                         "  del <file-or-directory>"
                     );
                     Console.WriteLine();
-                    Console.WriteLine("Examples:");
+                    break;
+
+                case "basaha":
+                    Console.WriteLine();
                     Console.WriteLine(
-                        "  del test.txt"
+                        "basaha - Read a file"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  basaha <file>"
                     );
                     Console.WriteLine(
-                        "  del folder"
+                        "  basaha <file> -n"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Options:");
+                    Console.WriteLine(
+                        "  -n    Show line numbers"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "history":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "history - Show command history"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  history"
                     );
                     Console.WriteLine();
                     break;
@@ -1392,6 +1561,19 @@ namespace Essentials.Commands
                     Console.WriteLine();
                     Console.WriteLine(
                         "tabang - Show available commands"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "bersyon":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "bersyon - Show Ban version information"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  bersyon"
                     );
                     Console.WriteLine();
                     break;
