@@ -57,6 +57,26 @@ namespace Essentials.Commands
                     Basaha(args, ops);
                     break;
 
+                case "sulat":
+                    Sulat(args);
+                    break;
+
+                case "dugang":
+                    Dugang(args);
+                    break;
+
+                case "pangita":
+                    Pangita(args, ops);
+                    break;
+
+                case "impormasyon":
+                    Impormasyon(args);
+                    break;
+
+                case "ngalan":
+                    Ngalan(args);
+                    break;
+
                 case "history":
                     History();
                     break;
@@ -1248,6 +1268,606 @@ namespace Essentials.Commands
             }
         }
 
+        private static void Sulat(
+            List<string> args)
+        {
+            if (args.Count < 2)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "sulat: file name and text are required."
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            string path =
+                args[0];
+
+            string text =
+                string.Join(
+                    " ",
+                    args.GetRange(
+                        1,
+                        args.Count - 1
+                    )
+                );
+
+            try
+            {
+                File.WriteAllText(
+                    path,
+                    text
+                );
+
+                Console.ForegroundColor =
+                    ConsoleColor.Green;
+
+                Console.WriteLine(
+                    $"Written: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"sulat: access denied: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (IOException ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"sulat: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"sulat: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
+        private static void Dugang(
+            List<string> args)
+        {
+            if (args.Count < 2)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "dugang: file name and text are required."
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            string path =
+                args[0];
+
+            string text =
+                string.Join(
+                    " ",
+                    args.GetRange(
+                        1,
+                        args.Count - 1
+                    )
+                );
+
+            try
+            {
+                File.AppendAllText(
+                    path,
+                    Environment.NewLine + text
+                );
+
+                Console.ForegroundColor =
+                    ConsoleColor.Green;
+
+                Console.WriteLine(
+                    $"Appended: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"dugang: access denied: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (IOException ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"dugang: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"dugang: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
+        private static void Pangita(
+            List<string> args,
+            List<string> ops)
+        {
+            if (args.Count < 2)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "pangita: search text and file name are required."
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            string search =
+                args[0];
+
+            string path =
+                string.Join(
+                    " ",
+                    args.GetRange(
+                        1,
+                        args.Count - 1
+                    )
+                );
+
+            bool caseSensitive = false;
+
+            foreach (string option in ops)
+            {
+                if (option.Equals(
+                    "-c",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    caseSensitive = true;
+                }
+            }
+
+            if (!File.Exists(path))
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"pangita: file not found: {path}"
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            try
+            {
+                string[] lines =
+                    File.ReadAllLines(path);
+
+                StringComparison comparison =
+                    caseSensitive
+                        ? StringComparison.Ordinal
+                        : StringComparison.OrdinalIgnoreCase;
+
+                int matches = 0;
+
+                for (int i = 0;
+                    i < lines.Length;
+                    i++)
+                {
+                    if (lines[i].IndexOf(
+                        search,
+                        comparison
+                    ) >= 0)
+                    {
+                        matches++;
+
+                        Console.ForegroundColor =
+                            ConsoleColor.DarkGray;
+
+                        Console.Write(
+                            $"{i + 1,4} | "
+                        );
+
+                        Console.ResetColor();
+
+                        Console.WriteLine(
+                            lines[i]
+                        );
+                    }
+                }
+
+                Console.ForegroundColor =
+                    ConsoleColor.Cyan;
+
+                Console.WriteLine();
+
+                Console.WriteLine(
+                    $"{matches} match(es) found."
+                );
+
+                Console.ResetColor();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"pangita: access denied: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (IOException ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"pangita: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"pangita: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
+        private static void Impormasyon(
+            List<string> args)
+        {
+            if (args.Count == 0)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "impormasyon: missing file or directory."
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            string path =
+                string.Join(" ", args);
+
+            try
+            {
+                if (File.Exists(path))
+                {
+                    FileInfo file =
+                        new FileInfo(path);
+
+                    Console.WriteLine();
+
+                    Console.ForegroundColor =
+                        ConsoleColor.Cyan;
+
+                    Console.WriteLine(
+                        "File Information"
+                    );
+
+                    Console.ResetColor();
+
+                    Console.WriteLine(
+                        $"Name:          {file.Name}"
+                    );
+
+                    Console.WriteLine(
+                        $"Full path:     {file.FullName}"
+                    );
+
+                    Console.WriteLine(
+                        $"Type:          File"
+                    );
+
+                    Console.WriteLine(
+                        $"Size:          {FormatSize(file.Length)}"
+                    );
+
+                    Console.WriteLine(
+                        $"Created:       {file.CreationTime}"
+                    );
+
+                    Console.WriteLine(
+                        $"Modified:      {file.LastWriteTime}"
+                    );
+
+                    Console.WriteLine(
+                        $"Accessed:      {file.LastAccessTime}"
+                    );
+
+                    Console.WriteLine(
+                        $"Attributes:    {file.Attributes}"
+                    );
+
+                    Console.WriteLine();
+
+                    return;
+                }
+
+                if (Directory.Exists(path))
+                {
+                    DirectoryInfo directory =
+                        new DirectoryInfo(path);
+
+                    Console.WriteLine();
+
+                    Console.ForegroundColor =
+                        ConsoleColor.Cyan;
+
+                    Console.WriteLine(
+                        "Directory Information"
+                    );
+
+                    Console.ResetColor();
+
+                    Console.WriteLine(
+                        $"Name:          {directory.Name}"
+                    );
+
+                    Console.WriteLine(
+                        $"Full path:     {directory.FullName}"
+                    );
+
+                    Console.WriteLine(
+                        $"Type:          Directory"
+                    );
+
+                    Console.WriteLine(
+                        $"Created:       {directory.CreationTime}"
+                    );
+
+                    Console.WriteLine(
+                        $"Modified:      {directory.LastWriteTime}"
+                    );
+
+                    Console.WriteLine(
+                        $"Accessed:      {directory.LastAccessTime}"
+                    );
+
+                    Console.WriteLine(
+                        $"Attributes:    {directory.Attributes}"
+                    );
+
+                    try
+                    {
+                        int folders =
+                            directory.GetDirectories().Length;
+
+                        int files =
+                            directory.GetFiles().Length;
+
+                        Console.WriteLine(
+                            $"Folders:       {folders}"
+                        );
+
+                        Console.WriteLine(
+                            $"Files:         {files}"
+                        );
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        Console.WriteLine(
+                            "Contents:      Access denied"
+                        );
+                    }
+
+                    Console.WriteLine();
+
+                    return;
+                }
+
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"impormasyon: '{path}' does not exist."
+                );
+
+                Console.ResetColor();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"impormasyon: access denied: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"impormasyon: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
+        private static void Ngalan(
+            List<string> args)
+        {
+            if (args.Count < 2)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "ngalan: old name and new name are required."
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            string source =
+                args[0];
+
+            string destination =
+                string.Join(
+                    " ",
+                    args.GetRange(
+                        1,
+                        args.Count - 1
+                    )
+                );
+
+            try
+            {
+                if (!File.Exists(source) &&
+                    !Directory.Exists(source))
+                {
+                    Console.ForegroundColor =
+                        ConsoleColor.Red;
+
+                    Console.WriteLine(
+                        $"ngalan: '{source}' does not exist."
+                    );
+
+                    Console.ResetColor();
+
+                    return;
+                }
+
+                if (File.Exists(destination) ||
+                    Directory.Exists(destination))
+                {
+                    Console.ForegroundColor =
+                        ConsoleColor.Yellow;
+
+                    Console.WriteLine(
+                        $"ngalan: destination already exists: {destination}"
+                    );
+
+                    Console.ResetColor();
+
+                    return;
+                }
+
+                if (File.Exists(source))
+                {
+                    File.Move(
+                        source,
+                        destination
+                    );
+                }
+                else
+                {
+                    Directory.Move(
+                        source,
+                        destination
+                    );
+                }
+
+                Console.ForegroundColor =
+                    ConsoleColor.Green;
+
+                Console.WriteLine(
+                    $"Renamed: {source} -> {destination}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    "ngalan: access denied."
+                );
+
+                Console.ResetColor();
+            }
+            catch (IOException ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"ngalan: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"ngalan: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
         private static void History()
         {
             List<string> history =
@@ -1306,67 +1926,87 @@ namespace Essentials.Commands
                 Console.WriteLine();
 
                 Console.WriteLine(
-                    "  cd           Change the current directory"
+                    "  cd             Change the current directory"
                 );
 
                 Console.WriteLine(
-                    "  himo         Create a directory"
+                    "  himo           Create a directory"
                 );
 
                 Console.WriteLine(
-                    "  tanaw        List files and directories"
+                    "  tanaw          List files and directories"
                 );
 
                 Console.WriteLine(
-                    "  familytree   Display the directory tree"
+                    "  familytree     Display the directory tree"
                 );
 
                 Console.WriteLine(
-                    "  igna         Print text to the console"
+                    "  igna           Print text to the console"
                 );
 
                 Console.WriteLine(
-                    "  kopya        Copy files and directories"
+                    "  kopya          Copy files and directories"
                 );
 
                 Console.WriteLine(
-                    "  balhin       Move or rename files and directories"
+                    "  balhin         Move files and directories"
                 );
 
                 Console.WriteLine(
-                    "  del          Delete files and directories"
+                    "  del            Delete files and directories"
                 );
 
                 Console.WriteLine(
-                    "  basaha       Read a file"
+                    "  basaha         Read a file"
                 );
 
                 Console.WriteLine(
-                    "  history      Show command history"
+                    "  sulat          Create or write to a file"
                 );
 
                 Console.WriteLine(
-                    "  dinako       Clear the screen"
+                    "  dugang         Append text to a file"
                 );
 
                 Console.WriteLine(
-                    "  oras         Show the current date and time"
+                    "  pangita        Search text inside a file"
                 );
 
                 Console.WriteLine(
-                    "  ambot        Test arguments and options"
+                    "  impormasyon    Show file or directory information"
                 );
 
                 Console.WriteLine(
-                    "  tabang       Show available commands"
+                    "  ngalan         Rename a file or directory"
                 );
 
                 Console.WriteLine(
-                    "  bersyon      Show Ban version information"
+                    "  history        Show command history"
                 );
 
                 Console.WriteLine(
-                    "  exit         Exit Ban"
+                    "  dinako         Clear the screen"
+                );
+
+                Console.WriteLine(
+                    "  oras           Show the current date and time"
+                );
+
+                Console.WriteLine(
+                    "  ambot          Test arguments and options"
+                );
+
+                Console.WriteLine(
+                    "  tabang         Show available commands"
+                );
+
+                Console.WriteLine(
+                    "  bersyon        Show Ban version information"
+                );
+
+                Console.WriteLine(
+                    "  exit            Exit Ban"
                 );
 
                 Console.WriteLine();
@@ -1516,6 +2156,79 @@ namespace Essentials.Commands
                     Console.WriteLine("Options:");
                     Console.WriteLine(
                         "  -n    Show line numbers"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "sulat":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "sulat - Create or write to a file"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  sulat <file> <text>"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "dugang":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "dugang - Append text to a file"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  dugang <file> <text>"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "pangita":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "pangita - Search text inside a file"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  pangita <text> <file>"
+                    );
+                    Console.WriteLine(
+                        "  pangita <text> <file> -c"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Options:");
+                    Console.WriteLine(
+                        "  -c    Case-sensitive search"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "impormasyon":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "impormasyon - Show file or directory information"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  impormasyon <file-or-directory>"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "ngalan":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "ngalan - Rename a file or directory"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  ngalan <old-name> <new-name>"
                     );
                     Console.WriteLine();
                     break;
