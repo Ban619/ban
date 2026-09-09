@@ -14,7 +14,7 @@ class Ban
 
             string input = editour.ReadLine();
 
-            if (string.IsNullOrEmpty(input))
+            if (string.IsNullOrWhiteSpace(input))
                 continue;
 
             if (input.Equals(
@@ -23,6 +23,8 @@ class Ban
             {
                 break;
             }
+
+            editour.AddHistory(input);
 
             Com.Execute(input);
         }

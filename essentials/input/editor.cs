@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Essentials.Jortcut;
 
 namespace Essentials.Input
@@ -6,6 +7,10 @@ namespace Essentials.Input
     public static class editour
     {
         private static string clipboard = "";
+
+        // history
+        private static readonly List<string> history = new();
+        private static int historyIndex = -1;
 
         // colors
         private const string CommandColor =
@@ -23,6 +28,15 @@ namespace Essentials.Input
         private const string SelectionColor =
             "\x1b[30;47m"; // black text, white background
 
+        public static void AddHistory(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return;
+
+            history.Add(input);
+            historyIndex = history.Count;
+        }
+
         public static string ReadLine()
         {
             string input = "";
@@ -30,6 +44,8 @@ namespace Essentials.Input
 
             int selectionStart = -1;
             int selectionEnd = -1;
+
+            historyIndex = history.Count;
 
             while (true)
             {
@@ -184,6 +200,75 @@ namespace Essentials.Input
                     cursor = MoveWordRight(input, cursor);
 
                     Redraw(input, cursor, -1, -1);
+
+                    continue;
+                }
+
+                // command history up
+
+                if (key.Key == ConsoleKey.UpArrow)
+                {
+                    if (history.Count > 0 &&
+                        historyIndex > 0)
+                    {
+                        historyIndex--;
+
+                        input = history[historyIndex];
+                        cursor = input.Length;
+
+                        selectionStart = -1;
+                        selectionEnd = -1;
+
+                        Redraw(
+                            input,
+                            cursor,
+                            selectionStart,
+                            selectionEnd
+                        );
+                    }
+
+                    continue;
+                }
+
+                // command history down
+
+                if (key.Key == ConsoleKey.DownArrow)
+                {
+                    if (history.Count > 0 &&
+                        historyIndex < history.Count - 1)
+                    {
+                        historyIndex++;
+
+                        input = history[historyIndex];
+                        cursor = input.Length;
+
+                        selectionStart = -1;
+                        selectionEnd = -1;
+
+                        Redraw(
+                            input,
+                            cursor,
+                            selectionStart,
+                            selectionEnd
+                        );
+                    }
+                    else if (historyIndex == history.Count - 1)
+                    {
+                        historyIndex = history.Count;
+
+                        input = "";
+                        cursor = 0;
+
+                        selectionStart = -1;
+                        selectionEnd = -1;
+
+                        Redraw(
+                            input,
+                            cursor,
+                            selectionStart,
+                            selectionEnd
+                        );
+                    }
 
                     continue;
                 }
@@ -460,6 +545,8 @@ namespace Essentials.Input
                     );
 
                     cursor++;
+
+                    historyIndex = history.Count;
 
                     Redraw(
                         input,

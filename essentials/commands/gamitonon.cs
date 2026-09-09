@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Essentials.Commands
 {
@@ -18,6 +19,10 @@ namespace Essentials.Commands
 
                 case "oras":
                     Oras();
+                    break;
+
+                case "cd":
+                    Cd(args);
                     break;
 
                 case "ambot":
@@ -52,18 +57,74 @@ namespace Essentials.Commands
             Console.ResetColor();
         }
 
+        private static void Cd(
+            List<string> args)
+        {
+            if (args.Count == 0)
+            {
+                Console.WriteLine(
+                    Directory.GetCurrentDirectory()
+                );
+
+                return;
+            }
+
+            string path = string.Join(" ", args);
+
+            try
+            {
+                Directory.SetCurrentDirectory(path);
+            }
+            catch (DirectoryNotFoundException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"cd: directory not found: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"cd: access denied: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"cd: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
         private static void Ambot(
             List<string> args,
             List<string> ops)
         {
             Console.WriteLine("Ambot command");
+
             if (args.Count > 0)
             {
                 Console.WriteLine("Arguments:");
 
                 foreach (string argument in args)
                 {
-                    Console.WriteLine($"  {argument}");
+                    Console.WriteLine(
+                        $"  {argument}"
+                    );
                 }
             }
 
@@ -73,7 +134,9 @@ namespace Essentials.Commands
 
                 foreach (string option in ops)
                 {
-                    Console.WriteLine($"  {option}");
+                    Console.WriteLine(
+                        $"  {option}"
+                    );
                 }
             }
 
