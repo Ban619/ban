@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Essentials.Jortcut;
 
 namespace Essentials.Input
@@ -8,33 +9,50 @@ namespace Essentials.Input
     {
         private static string clipboard = "";
 
-        // history
-        private static readonly List<string> history = new();
+        private static readonly List<string> history =
+            new List<string>();
+
         private static int historyIndex = -1;
 
-        // colors
         private const string CommandColor =
-            "\x1b[38;2;210;180;140m"; // light brown
+            "\x1b[38;2;210;180;140m";
 
         private const string ArgumentColor =
-            "\x1b[38;2;80;200;220m"; // cyan
+            "\x1b[38;2;80;200;220m";
 
         private const string OptionColor =
-            "\x1b[38;2;230;200;80m"; // yellow
+            "\x1b[38;2;230;200;80m";
 
         private const string ResetColor =
             "\x1b[0m";
 
         private const string SelectionColor =
-            "\x1b[30;47m"; // black text, white background
+            "\x1b[30;47m";
 
-        public static void AddHistory(string input)
+        public static void AddHistory(string command)
         {
-            if (string.IsNullOrWhiteSpace(input))
+            if (string.IsNullOrWhiteSpace(command))
                 return;
 
-            history.Add(input);
+            command = command.Trim();
+
+            if (history.Count > 0 &&
+                history[history.Count - 1]
+                    .Equals(
+                        command,
+                        StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            history.Add(command);
+
             historyIndex = history.Count;
+        }
+
+        public static List<string> GetHistory()
+        {
+            return new List<string>(history);
         }
 
         public static string ReadLine()
@@ -204,69 +222,103 @@ namespace Essentials.Input
                     continue;
                 }
 
-                // command history up
+                // history up
 
                 if (key.Key == ConsoleKey.UpArrow)
                 {
-                    if (history.Count > 0 &&
-                        historyIndex > 0)
+                    if (history.Count > 0)
                     {
-                        historyIndex--;
+                        if (historyIndex > 0)
+                            historyIndex--;
 
-                        input = history[historyIndex];
-                        cursor = input.Length;
+                        input =
+                            history[historyIndex];
 
-                        selectionStart = -1;
-                        selectionEnd = -1;
+                        cursor =
+                            input.Length;
+
+                        ClearSelection(
+                            ref selectionStart,
+                            ref selectionEnd
+                        );
 
                         Redraw(
                             input,
                             cursor,
-                            selectionStart,
-                            selectionEnd
+                            -1,
+                            -1
                         );
                     }
 
                     continue;
                 }
 
-                // command history down
+                // history down
 
                 if (key.Key == ConsoleKey.DownArrow)
                 {
-                    if (history.Count > 0 &&
-                        historyIndex < history.Count - 1)
+                    if (history.Count > 0)
                     {
-                        historyIndex++;
+                        if (historyIndex < history.Count - 1)
+                        {
+                            historyIndex++;
 
-                        input = history[historyIndex];
-                        cursor = input.Length;
+                            input =
+                                history[historyIndex];
 
-                        selectionStart = -1;
-                        selectionEnd = -1;
+                            cursor =
+                                input.Length;
+                        }
+                        else
+                        {
+                            historyIndex =
+                                history.Count;
+
+                            input = "";
+                            cursor = 0;
+                        }
+
+                        ClearSelection(
+                            ref selectionStart,
+                            ref selectionEnd
+                        );
 
                         Redraw(
                             input,
                             cursor,
-                            selectionStart,
-                            selectionEnd
+                            -1,
+                            -1
                         );
                     }
-                    else if (historyIndex == history.Count - 1)
+
+                    continue;
+                }
+
+                // tab completion
+
+                if (key.Key == ConsoleKey.Tab)
+                {
+                    string completed =
+                        Complete(
+                            input,
+                            cursor
+                        );
+
+                    if (completed != input)
                     {
-                        historyIndex = history.Count;
+                        input = completed;
+                        cursor = input.Length;
 
-                        input = "";
-                        cursor = 0;
-
-                        selectionStart = -1;
-                        selectionEnd = -1;
+                        ClearSelection(
+                            ref selectionStart,
+                            ref selectionEnd
+                        );
 
                         Redraw(
                             input,
                             cursor,
-                            selectionStart,
-                            selectionEnd
+                            -1,
+                            -1
                         );
                     }
 
@@ -556,6 +608,159 @@ namespace Essentials.Input
                     );
                 }
             }
+        }
+
+        private static string Complete(
+            string input,
+            int cursor)
+        {
+            if (cursor != input.Length)
+                return input;
+
+            int wordStart = cursor - 1;
+
+            while (
+                wordStart >= 0 &&
+                !char.IsWhiteSpace(input[wordStart]))
+            {
+                wordStart--;
+            }
+
+            wordStart++;
+
+            string currentWord =
+                input.Substring(
+                    wordStart,
+                    cursor - wordStart
+                );
+
+            if (wordStart == 0)
+            {
+                string[] commands =
+                {
+                    "cd",
+                    "himo",
+                    "tanaw",
+                    "familytree",
+                    "igna",
+                    "kopya",
+                    "balhin",
+                    "del",
+                    "dinako",
+                    "oras",
+                    "ambot",
+                    "tabang",
+                    "bersyon",
+                    "exit"
+                };
+
+                foreach (string command in commands)
+                {
+                    if (command.StartsWith(
+                        currentWord,
+                        StringComparison.OrdinalIgnoreCase))
+                    {
+                        return command;
+                    }
+                }
+
+                return input;
+            }
+
+            string prefix =
+                input.Substring(
+                    0,
+                    wordStart
+                );
+
+            string directoryPart =
+                Path.GetDirectoryName(currentWord);
+
+            string filePrefix =
+                Path.GetFileName(currentWord);
+
+            string searchDirectory;
+
+            if (string.IsNullOrEmpty(directoryPart))
+            {
+                searchDirectory =
+                    Directory.GetCurrentDirectory();
+            }
+            else
+            {
+                searchDirectory =
+                    Path.GetFullPath(
+                        directoryPart
+                    );
+            }
+
+            try
+            {
+                if (!Directory.Exists(searchDirectory))
+                    return input;
+
+                string[] directories =
+                    Directory.GetDirectories(
+                        searchDirectory
+                    );
+
+                foreach (string directory in directories)
+                {
+                    string name =
+                        Path.GetFileName(
+                            directory
+                        );
+
+                    if (name.StartsWith(
+                        filePrefix,
+                        StringComparison.OrdinalIgnoreCase))
+                    {
+                        string result =
+                            directoryPart == null
+                                ? name
+                                : Path.Combine(
+                                    directoryPart,
+                                    name
+                                );
+
+                        return prefix + result;
+                    }
+                }
+
+                string[] files =
+                    Directory.GetFiles(
+                        searchDirectory
+                    );
+
+                foreach (string file in files)
+                {
+                    string name =
+                        Path.GetFileName(
+                            file
+                        );
+
+                    if (name.StartsWith(
+                        filePrefix,
+                        StringComparison.OrdinalIgnoreCase))
+                    {
+                        string result =
+                            directoryPart == null
+                                ? name
+                                : Path.Combine(
+                                    directoryPart,
+                                    name
+                                );
+
+                        return prefix + result;
+                    }
+                }
+            }
+            catch
+            {
+                return input;
+            }
+
+            return input;
         }
 
         // selecta 
