@@ -29,6 +29,14 @@ namespace Essentials.Commands
                     Himo(args);
                     break;
 
+                case "tanaw":
+                    Tanaw(args);
+                    break;
+
+                case "igna":
+                    Igna(args);
+                    break;
+
                 case "tabang":
                     Tabang(args);
                     break;
@@ -177,6 +185,124 @@ namespace Essentials.Commands
             }
         }
 
+        private static void Tanaw(
+            List<string> args)
+        {
+            string path;
+
+            if (args.Count == 0)
+            {
+                path = Directory.GetCurrentDirectory();
+            }
+            else
+            {
+                path = string.Join(" ", args);
+            }
+
+            try
+            {
+                if (!Directory.Exists(path))
+                {
+                    Console.ForegroundColor =
+                        ConsoleColor.Red;
+
+                    Console.WriteLine(
+                        $"tanaw: directory not found: {path}"
+                    );
+
+                    Console.ResetColor();
+
+                    return;
+                }
+
+                string[] directories =
+                    Directory.GetDirectories(path);
+
+                string[] files =
+                    Directory.GetFiles(path);
+
+                Console.WriteLine();
+
+                Console.ForegroundColor =
+                    ConsoleColor.Cyan;
+
+                Console.WriteLine("Folders:");
+
+                Console.ResetColor();
+
+                foreach (string directory in directories)
+                {
+                    Console.ForegroundColor =
+                        ConsoleColor.Blue;
+
+                    Console.WriteLine(
+                        $"  {Path.GetFileName(directory)}"
+                    );
+
+                    Console.ResetColor();
+                }
+
+                Console.WriteLine();
+
+                Console.ForegroundColor =
+                    ConsoleColor.Cyan;
+
+                Console.WriteLine("Files:");
+
+                Console.ResetColor();
+
+                foreach (string file in files)
+                {
+                    Console.ForegroundColor =
+                        ConsoleColor.White;
+
+                    Console.WriteLine(
+                        $"  {Path.GetFileName(file)}"
+                    );
+
+                    Console.ResetColor();
+                }
+
+                Console.WriteLine();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"tanaw: access denied: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"tanaw: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
+        private static void Igna(
+            List<string> args)
+        {
+            if (args.Count == 0)
+            {
+                Console.WriteLine();
+                return;
+            }
+
+            Console.WriteLine(
+                string.Join(" ", args)
+            );
+        }
+
         private static void Tabang(
             List<string> args)
         {
@@ -195,6 +321,14 @@ namespace Essentials.Commands
 
                 Console.WriteLine(
                     "  himo     Create a directory"
+                );
+
+                Console.WriteLine(
+                    "  tanaw    List files and directories"
+                );
+
+                Console.WriteLine(
+                    "  igna     Print text to the console"
                 );
 
                 Console.WriteLine(
@@ -232,7 +366,7 @@ namespace Essentials.Commands
                 case "cd":
                     Console.WriteLine();
                     Console.WriteLine(
-                        "cd - alisdan imong current directory"
+                        "cd - Change the current directory"
                     );
                     Console.WriteLine();
                     Console.WriteLine("Usage:");
@@ -273,6 +407,51 @@ namespace Essentials.Commands
                     );
                     Console.WriteLine(
                         "  himo \"My Folder\""
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "tanaw":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "tanaw - List files and directories"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  tanaw"
+                    );
+                    Console.WriteLine(
+                        "  tanaw <directory>"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Examples:");
+                    Console.WriteLine(
+                        "  tanaw"
+                    );
+                    Console.WriteLine(
+                        "  tanaw docs"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "igna":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "igna - Print text to the console"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  igna <text>"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Examples:");
+                    Console.WriteLine(
+                        "  igna Hello world"
+                    );
+                    Console.WriteLine(
+                        "  igna Ban is running"
                     );
                     Console.WriteLine();
                     break;
@@ -350,7 +529,7 @@ namespace Essentials.Commands
                         ConsoleColor.Red;
 
                     Console.WriteLine(
-                        $"tabang: way tabang para ani '{args[0]}'."
+                        $"tabang: no help available for '{args[0]}'."
                     );
 
                     Console.ResetColor();
@@ -362,7 +541,7 @@ namespace Essentials.Commands
             List<string> args,
             List<string> ops)
         {
-            Console.WriteLine("ambot command");
+            Console.WriteLine("Ambot command");
 
             if (args.Count > 0)
             {
