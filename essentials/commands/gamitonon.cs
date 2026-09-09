@@ -33,6 +33,10 @@ namespace Essentials.Commands
                     Tanaw(args);
                     break;
 
+                case "familytree":
+                    FamilyTree(args);
+                    break;
+
                 case "igna":
                     Igna(args);
                     break;
@@ -93,7 +97,8 @@ namespace Essentials.Commands
                 return;
             }
 
-            string path = string.Join(" ", args);
+            string path =
+                string.Join(" ", args);
 
             try
             {
@@ -151,7 +156,8 @@ namespace Essentials.Commands
                 return;
             }
 
-            string path = string.Join(" ", args);
+            string path =
+                string.Join(" ", args);
 
             try
             {
@@ -200,11 +206,13 @@ namespace Essentials.Commands
 
             if (args.Count == 0)
             {
-                path = Directory.GetCurrentDirectory();
+                path =
+                    Directory.GetCurrentDirectory();
             }
             else
             {
-                path = string.Join(" ", args);
+                path =
+                    string.Join(" ", args);
             }
 
             try
@@ -297,6 +305,182 @@ namespace Essentials.Commands
             }
         }
 
+        private static void FamilyTree(
+            List<string> args)
+        {
+            string path;
+
+            if (args.Count == 0)
+            {
+                path =
+                    Directory.GetCurrentDirectory();
+            }
+            else
+            {
+                path =
+                    string.Join(" ", args);
+            }
+
+            try
+            {
+                if (!Directory.Exists(path))
+                {
+                    Console.ForegroundColor =
+                        ConsoleColor.Red;
+
+                    Console.WriteLine(
+                        $"familytree: directory not found: {path}"
+                    );
+
+                    Console.ResetColor();
+
+                    return;
+                }
+
+                DirectoryInfo directory =
+                    new DirectoryInfo(path);
+
+                Console.WriteLine();
+
+                Console.ForegroundColor =
+                    ConsoleColor.Cyan;
+
+                Console.WriteLine(
+                    directory.Name
+                );
+
+                Console.ResetColor();
+
+                PrintTree(
+                    directory,
+                    ""
+                );
+
+                Console.WriteLine();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"familytree: access denied: {path}"
+                );
+
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"familytree: {ex.Message}"
+                );
+
+                Console.ResetColor();
+            }
+        }
+
+        private static void PrintTree(
+            DirectoryInfo directory,
+            string indent)
+        {
+            DirectoryInfo[] directories;
+            FileInfo[] files;
+
+            try
+            {
+                directories =
+                    directory.GetDirectories();
+
+                files =
+                    directory.GetFiles();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.ForegroundColor =
+                    ConsoleColor.Red;
+
+                Console.WriteLine(
+                    $"{indent}└── [Access Denied]"
+                );
+
+                Console.ResetColor();
+
+                return;
+            }
+
+            int total =
+                directories.Length +
+                files.Length;
+
+            int current = 0;
+
+            foreach (DirectoryInfo child in directories)
+            {
+                current++;
+
+                bool last =
+                    current == total;
+
+                Console.Write(
+                    indent
+                );
+
+                Console.Write(
+                    last
+                        ? "└── "
+                        : "├── "
+                );
+
+                Console.ForegroundColor =
+                    ConsoleColor.Blue;
+
+                Console.WriteLine(
+                    child.Name
+                );
+
+                Console.ResetColor();
+
+                string nextIndent =
+                    indent +
+                    (last ? "    " : "│   ");
+
+                PrintTree(
+                    child,
+                    nextIndent
+                );
+            }
+
+            foreach (FileInfo file in files)
+            {
+                current++;
+
+                bool last =
+                    current == total;
+
+                Console.Write(
+                    indent
+                );
+
+                Console.Write(
+                    last
+                        ? "└── "
+                        : "├── "
+                );
+
+                Console.ForegroundColor =
+                    ConsoleColor.White;
+
+                Console.WriteLine(
+                    file.Name
+                );
+
+                Console.ResetColor();
+            }
+        }
+
         private static void Igna(
             List<string> args)
         {
@@ -328,7 +512,8 @@ namespace Essentials.Commands
                 return;
             }
 
-            string source = args[0];
+            string source =
+                args[0];
 
             string destination =
                 string.Join(
@@ -430,7 +615,8 @@ namespace Essentials.Commands
                 return;
             }
 
-            string source = args[0];
+            string source =
+                args[0];
 
             string destination =
                 string.Join(
@@ -524,51 +710,57 @@ namespace Essentials.Commands
                     ConsoleColor.Cyan;
 
                 Console.WriteLine();
-                Console.WriteLine("Available commands:");
+                Console.WriteLine(
+                    "Available commands:"
+                );
                 Console.WriteLine();
 
                 Console.WriteLine(
-                    "  cd       Change the current directory"
+                    "  cd           Change the current directory"
                 );
 
                 Console.WriteLine(
-                    "  himo     Create a directory"
+                    "  himo         Create a directory"
                 );
 
                 Console.WriteLine(
-                    "  tanaw    List files and directories"
+                    "  tanaw        List files and directories"
                 );
 
                 Console.WriteLine(
-                    "  igna     Print text to the console"
+                    "  familytree   Display the directory tree"
                 );
 
                 Console.WriteLine(
-                    "  kopya    Copy a file"
+                    "  igna         Print text to the console"
                 );
 
                 Console.WriteLine(
-                    "  balhin   Move or rename a file"
+                    "  kopya        Copy a file"
                 );
 
                 Console.WriteLine(
-                    "  dinako   Clear the screen"
+                    "  balhin       Move or rename a file"
                 );
 
                 Console.WriteLine(
-                    "  oras     Show the current date and time"
+                    "  dinako       Clear the screen"
                 );
 
                 Console.WriteLine(
-                    "  ambot    Test arguments and options"
+                    "  oras         Show the current date and time"
                 );
 
                 Console.WriteLine(
-                    "  tabang   Show available commands"
+                    "  ambot        Test arguments and options"
                 );
 
                 Console.WriteLine(
-                    "  exit     Exit Ban"
+                    "  tabang       Show available commands"
+                );
+
+                Console.WriteLine(
+                    "  exit         Exit Ban"
                 );
 
                 Console.WriteLine();
@@ -651,6 +843,30 @@ namespace Essentials.Commands
                     );
                     Console.WriteLine(
                         "  tanaw docs"
+                    );
+                    Console.WriteLine();
+                    break;
+
+                case "familytree":
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        "familytree - Display the directory tree"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine(
+                        "  familytree"
+                    );
+                    Console.WriteLine(
+                        "  familytree <directory>"
+                    );
+                    Console.WriteLine();
+                    Console.WriteLine("Examples:");
+                    Console.WriteLine(
+                        "  familytree"
+                    );
+                    Console.WriteLine(
+                        "  familytree docs"
                     );
                     Console.WriteLine();
                     break;
@@ -803,11 +1019,15 @@ namespace Essentials.Commands
             List<string> args,
             List<string> ops)
         {
-            Console.WriteLine("Ambot command");
+            Console.WriteLine(
+                "Ambot command"
+            );
 
             if (args.Count > 0)
             {
-                Console.WriteLine("Arguments:");
+                Console.WriteLine(
+                    "Arguments:"
+                );
 
                 foreach (string argument in args)
                 {
@@ -819,7 +1039,9 @@ namespace Essentials.Commands
 
             if (ops.Count > 0)
             {
-                Console.WriteLine("options: ");
+                Console.WriteLine(
+                    "options: "
+                );
 
                 foreach (string option in ops)
                 {
@@ -832,7 +1054,9 @@ namespace Essentials.Commands
             if (args.Count == 0 &&
                 ops.Count == 0)
             {
-                Console.WriteLine("way sulod..");
+                Console.WriteLine(
+                    "way sulod.."
+                );
             }
         }
     }
