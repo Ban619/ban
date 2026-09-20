@@ -1,33 +1,85 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Essentials.Configuration;
+using Essentials.Commands;
 using Essentials.Jortcut;
 
 namespace Essentials.Input
 {
-    public static class editour
+    public static class Editour
     {
         private static string clipboard = "";
+        private static ShellConfiguration configuration = new ShellConfiguration();
+        private static int renderedLength;
+        private static int renderedWidth;
+        private static int renderedRow;
+        private static int renderedColumn;
 
         private static readonly List<string> history =
             new List<string>();
 
         private static int historyIndex = -1;
 
-        private const string CommandColor =
-            "\x1b[38;2;210;180;140m";
-
-        private const string ArgumentColor =
-            "\x1b[38;2;80;200;220m";
-
-        private const string OptionColor =
-            "\x1b[38;2;230;200;80m";
+        private static string CommandColor = "\x1b[38;2;210;180;140m";
+        private static string ArgumentColor = "\x1b[38;2;80;200;220m";
+        private static string OptionColor = "\x1b[38;2;230;200;80m";
 
         private const string ResetColor =
             "\x1b[0m";
 
-        private const string SelectionColor =
+        private static string SelectionColor =
             "\x1b[30;47m";
+
+        public static void Initialize(ShellConfiguration shellConfiguration)
+        {
+            configuration = shellConfiguration;
+            CommandColor = ToAnsiForeground(configuration.Theme.Command);
+            ArgumentColor = ToAnsiForeground(configuration.Theme.Argument);
+            OptionColor = ToAnsiForeground(configuration.Theme.Option);
+            SelectionColor = ToAnsiSelection(
+                configuration.Theme.SelectionForeground,
+                configuration.Theme.SelectionBackground);
+
+            history.Clear();
+            historyIndex = -1;
+
+            if (!configuration.HistoryEnabled)
+                return;
+
+            string path = GetHistoryPath();
+
+            try
+            {
+                if (File.Exists(path))
+                {
+                    foreach (string line in File.ReadLines(path))
+                    {
+                        if (!string.IsNullOrWhiteSpace(line))
+                            history.Add(line);
+                    }
+
+                    TrimHistory();
+                }
+            }
+            catch (IOException)
+            {
+            }
+        }
+
+        public static void SaveHistory()
+        {
+            if (!configuration.HistoryEnabled)
+                return;
+
+            try
+            {
+                File.WriteAllLines(GetHistoryPath(), history);
+            }
+            catch (IOException)
+            {
+            }
+        }
 
         public static void AddHistory(string command)
         {
@@ -46,6 +98,7 @@ namespace Essentials.Input
             }
 
             history.Add(command);
+            TrimHistory();
 
             historyIndex = history.Count;
         }
@@ -55,10 +108,61 @@ namespace Essentials.Input
             return new List<string>(history);
         }
 
+        private static string GetHistoryPath()
+        {
+            if (Path.IsPathRooted(configuration.HistoryFile))
+                return configuration.HistoryFile;
+
+            string directory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Y");
+
+            Directory.CreateDirectory(directory);
+            return Path.Combine(directory, configuration.HistoryFile);
+        }
+
+        private static void TrimHistory()
+        {
+            while (history.Count > configuration.MaxHistoryEntries)
+                history.RemoveAt(0);
+        }
+
+        private static string ToAnsiForeground(ConsoleColor color)
+        {
+            int value = (int)color;
+            int code = value < 8
+                ? 30 + value
+                : 90 + value - 8;
+
+            return $"\x1b[{code}m";
+        }
+
+        private static string ToAnsiSelection(
+            ConsoleColor foreground,
+            ConsoleColor background)
+        {
+            int foregroundValue = (int)foreground;
+            int backgroundValue = (int)background;
+            int foregroundCode = foregroundValue < 8
+                ? 30 + foregroundValue
+                : 90 + foregroundValue - 8;
+            int backgroundCode = backgroundValue < 8
+                ? 40 + backgroundValue
+                : 100 + backgroundValue - 8;
+
+            return $"\x1b[{foregroundCode};{backgroundCode}m";
+        }
+
         public static string ReadLine()
         {
             string input = "";
             int cursor = 0;
+            int promptColumn = Console.CursorLeft;
+
+            renderedLength = 0;
+            renderedWidth = Math.Max(1, Console.WindowWidth);
+            renderedRow = Console.CursorTop;
+            renderedColumn = promptColumn;
 
             int selectionStart = -1;
             int selectionEnd = -1;
@@ -89,7 +193,7 @@ namespace Essentials.Input
                     selectionStart = -1;
                     selectionEnd = -1;
 
-                    Redraw(input, cursor, -1, -1);
+                    Redraw(input, cursor, -1, -1, promptColumn);
                     continue;
                 }
 
@@ -108,7 +212,8 @@ namespace Essentials.Input
                         input,
                         cursor,
                         selectionStart,
-                        selectionEnd
+                        selectionEnd,
+                        promptColumn
                     );
 
                     continue;
@@ -125,9 +230,12 @@ namespace Essentials.Input
                             selectionStart,
                             selectionEnd
                         );
+
+                        continue;
                     }
 
-                    continue;
+                    Console.WriteLine("^C");
+                    return "";
                 }
 
                 // cut
@@ -151,7 +259,8 @@ namespace Essentials.Input
                             input,
                             cursor,
                             selectionStart,
-                            selectionEnd
+                            selectionEnd,
+                            promptColumn
                         );
                     }
 
@@ -186,7 +295,8 @@ namespace Essentials.Input
                         input,
                         cursor,
                         selectionStart,
-                        selectionEnd
+                        selectionEnd,
+                        promptColumn
                     );
 
                     continue;
@@ -203,7 +313,7 @@ namespace Essentials.Input
 
                     cursor = MoveWordLeft(input, cursor);
 
-                    Redraw(input, cursor, -1, -1);
+                    Redraw(input, cursor, -1, -1, promptColumn);
 
                     continue;
                 }
@@ -217,7 +327,7 @@ namespace Essentials.Input
 
                     cursor = MoveWordRight(input, cursor);
 
-                    Redraw(input, cursor, -1, -1);
+                    Redraw(input, cursor, -1, -1, promptColumn);
 
                     continue;
                 }
@@ -246,7 +356,8 @@ namespace Essentials.Input
                             input,
                             cursor,
                             -1,
-                            -1
+                            -1,
+                            promptColumn
                         );
                     }
 
@@ -287,7 +398,8 @@ namespace Essentials.Input
                             input,
                             cursor,
                             -1,
-                            -1
+                            -1,
+                            promptColumn
                         );
                     }
 
@@ -318,7 +430,8 @@ namespace Essentials.Input
                             input,
                             cursor,
                             -1,
-                            -1
+                            -1,
+                            promptColumn
                         );
                     }
 
@@ -354,7 +467,8 @@ namespace Essentials.Input
                         input,
                         cursor,
                         selectionStart,
-                        selectionEnd
+                        selectionEnd,
+                        promptColumn
                     );
 
                     continue;
@@ -389,7 +503,8 @@ namespace Essentials.Input
                         input,
                         cursor,
                         selectionStart,
-                        selectionEnd
+                        selectionEnd,
+                        promptColumn
                     );
 
                     continue;
@@ -438,7 +553,8 @@ namespace Essentials.Input
                         input,
                         cursor,
                         selectionStart,
-                        selectionEnd
+                        selectionEnd,
+                        promptColumn
                     );
 
                     continue;
@@ -487,13 +603,50 @@ namespace Essentials.Input
                         input,
                         cursor,
                         selectionStart,
-                        selectionEnd
+                        selectionEnd,
+                        promptColumn
                     );
 
                     continue;
                 }
 
-                // backspace
+                // ctrl + backspace / backspace
+
+                if (ctrl && key.Key == ConsoleKey.Backspace)
+                {
+                    if (HasSelection(
+                        selectionStart,
+                        selectionEnd))
+                    {
+                        input = Erase.Selection(
+                            input,
+                            selectionStart,
+                            selectionEnd,
+                            out cursor
+                        );
+
+                        ClearSelection(
+                            ref selectionStart,
+                            ref selectionEnd
+                        );
+                    }
+                    else
+                    {
+                        int deleteStart = MoveWordLeft(input, cursor);
+                        input = input.Remove(deleteStart, cursor - deleteStart);
+                        cursor = deleteStart;
+                    }
+
+                    Redraw(
+                        input,
+                        cursor,
+                        selectionStart,
+                        selectionEnd,
+                        promptColumn
+                    );
+
+                    continue;
+                }
 
                 if (key.Key == ConsoleKey.Backspace)
                 {
@@ -526,7 +679,8 @@ namespace Essentials.Input
                         input,
                         cursor,
                         selectionStart,
-                        selectionEnd
+                        selectionEnd,
+                        promptColumn
                     );
 
                     continue;
@@ -564,7 +718,8 @@ namespace Essentials.Input
                         input,
                         cursor,
                         selectionStart,
-                        selectionEnd
+                        selectionEnd,
+                        promptColumn
                     );
 
                     continue;
@@ -604,7 +759,8 @@ namespace Essentials.Input
                         input,
                         cursor,
                         selectionStart,
-                        selectionEnd
+                        selectionEnd,
+                        promptColumn
                     );
                 }
             }
@@ -636,22 +792,13 @@ namespace Essentials.Input
 
             if (wordStart == 0)
             {
-                string[] commands =
+                List<string> commands = new List<string>(
+                    Gamitonon.GetCommandNames())
                 {
-                    "cd",
-                    "himo",
-                    "tanaw",
-                    "familytree",
-                    "igna",
-                    "kopya",
-                    "balhin",
-                    "del",
-                    "dinako",
-                    "oras",
-                    "ambot",
-                    "tabang",
-                    "bersyon",
-                    "exit"
+                    "exit",
+                    "set",
+                    "vars",
+                    "where"
                 };
 
                 foreach (string command in commands)
@@ -673,7 +820,7 @@ namespace Essentials.Input
                     wordStart
                 );
 
-            string directoryPart =
+            string? directoryPart =
                 Path.GetDirectoryName(currentWord);
 
             string filePrefix =
@@ -850,27 +997,44 @@ namespace Essentials.Input
             string input,
             int cursor,
             int selectionStart,
-            int selectionEnd)
+            int selectionEnd,
+            int promptColumn)
         {
-            Console.CursorLeft = 0;
+            int width = Math.Max(1, Console.WindowWidth);
+            int row = Console.CursorTop;
+            int column = promptColumn;
 
-            int clearLength =
-                Math.Max(
-                    1,
-                    Console.WindowWidth - 1
-                );
+            renderedRow = row;
+            renderedColumn = promptColumn;
 
-            Console.Write(
-                new string(
-                    ' ',
-                    clearLength
-                )
-            );
-
-            Console.CursorLeft = 0;
+            try
+            {
+                Console.SetCursorPosition(promptColumn, row);
+                Console.Write(new string(' ', Math.Max(0, width - promptColumn)));
+                Console.SetCursorPosition(promptColumn, row);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return;
+            }
 
             for (int i = 0; i < input.Length; i++)
             {
+                if (column >= width)
+                {
+                    row++;
+                    column = 0;
+                }
+
+                try
+                {
+                    Console.SetCursorPosition(column, row);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    break;
+                }
+
                 bool selected =
                     HasSelection(
                         selectionStart,
@@ -885,67 +1049,105 @@ namespace Essentials.Input
                         selectionEnd
                     );
 
-                // selected text
-
                 if (selected)
                 {
                     Console.Write(SelectionColor);
                     Console.Write(input[i]);
                     Console.Write(ResetColor);
-
-                    continue;
                 }
-
-                // find beginning of current word
-
-                int wordStart = i;
-
-                while (
-                    wordStart > 0 &&
-                    input[wordStart - 1] != ' ')
-                {
-                    wordStart--;
-                }
-
-                // command
-
-                if (wordStart == 0)
-                {
-                    Console.Write(CommandColor);
-                }
-
-                // option
-
                 else
                 {
-                    string word = GetWord(
-                        input,
-                        wordStart
-                    );
+                    int wordStart = i;
 
-                    if (word.StartsWith(
-                        "-",
-                        StringComparison.Ordinal))
+                    while (
+                        wordStart > 0 &&
+                        input[wordStart - 1] != ' ')
                     {
-                        Console.Write(OptionColor);
+                        wordStart--;
+                    }
+
+                    if (wordStart == 0)
+                    {
+                        Console.Write(CommandColor);
                     }
                     else
                     {
-                        Console.Write(ArgumentColor);
+                        string word = GetWord(
+                            input,
+                            wordStart
+                        );
+
+                        if (word.StartsWith(
+                            "-",
+                            StringComparison.Ordinal))
+                        {
+                            Console.Write(OptionColor);
+                        }
+                        else
+                        {
+                            Console.Write(ArgumentColor);
+                        }
                     }
+
+                    Console.Write(input[i]);
+                    Console.Write(ResetColor);
                 }
 
-                Console.Write(input[i]);
-                Console.Write(ResetColor);
+                column++;
             }
 
             Console.ResetColor();
+            renderedLength = input.Length;
+            renderedWidth = width;
 
-            Console.CursorLeft =
-                Math.Min(
-                    cursor,
-                    Console.WindowWidth - 1
-                );
+            int cursorOffset = Math.Min(cursor, input.Length);
+            int cursorRow = row;
+            int cursorColumn = promptColumn + cursorOffset;
+
+            if (cursorColumn >= width)
+            {
+                cursorRow += cursorColumn / width;
+                cursorColumn %= width;
+            }
+
+            try
+            {
+                Console.SetCursorPosition(cursorColumn, cursorRow);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                renderedLength = 0;
+            }
+        }
+
+        private static void ClearRendered(int width, int newLength)
+        {
+            try
+            {
+                Console.SetCursorPosition(renderedColumn, renderedRow);
+                Console.Write(new string(' ', Math.Max(0, width - renderedColumn)));
+                Console.SetCursorPosition(renderedColumn, renderedRow);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+            }
+        }
+
+        private static bool TrySetCell(int offset, int width)
+        {
+            int absoluteColumn = renderedColumn + offset;
+            int column = absoluteColumn % width;
+            int row = renderedRow + absoluteColumn / width;
+
+            try
+            {
+                Console.SetCursorPosition(column, row);
+                return true;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return false;
+            }
         }
 
         private static string GetWord(

@@ -1,109 +1,98 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Essentials.Configuration;
 
 namespace Essentials.Commands
 {
     public static class Gamitonon
     {
-        public static void Execute(
+        private static readonly Dictionary<string, Action<List<string>, List<string>>> Commands =
+            new Dictionary<string, Action<List<string>, List<string>>>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["dinako"] = (_, __) => Dinako(),
+                ["oras"] = (_, __) => Oras(),
+                ["cd"] = (args, __) => Cd(args),
+                ["himo"] = (args, __) => Himo(args),
+                ["tanaw"] = (args, ops) => Tanaw(args, ops),
+                ["familytree"] = (args, __) => FamilyTree(args),
+                ["igna"] = (args, __) => Igna(args),
+                ["kopya"] = (args, __) => Kopya(args),
+                ["balhin"] = (args, __) => Balhin(args),
+                ["del"] = (args, __) => Del(args),
+                ["basaha"] = (args, ops) => Basaha(args, ops),
+                ["sulat"] = (args, __) => Sulat(args),
+                ["dugang"] = (args, __) => Dugang(args),
+                ["pangita"] = (args, ops) => Pangita(args, ops),
+                ["impormasyon"] = (args, __) => Impormasyon(args),
+                ["ngalan"] = (args, __) => Ngalan(args),
+                ["history"] = (_, __) => History(),
+                ["tabang"] = (args, __) => Tabang(args),
+                ["bersyon"] = (_, __) => Bersyon(),
+                ["ambot"] = (args, ops) => Ambot(args, ops)
+            };
+
+        private static readonly Dictionary<string, string> Descriptions =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["dinako"] = "Clear the screen",
+                ["oras"] = "Show the current date and time",
+                ["cd"] = "Change the current directory",
+                ["himo"] = "Create a directory",
+                ["tanaw"] = "List files and directories",
+                ["familytree"] = "Display the directory tree",
+                ["igna"] = "Print text to the console",
+                ["kopya"] = "Copy files and directories",
+                ["balhin"] = "Move or rename files and directories",
+                ["del"] = "Delete files and directories",
+                ["basaha"] = "Read a file",
+                ["sulat"] = "Create or write to a file",
+                ["dugang"] = "Append text to a file",
+                ["pangita"] = "Search text inside a file",
+                ["impormasyon"] = "Show file or directory information",
+                ["ngalan"] = "Rename a file or directory",
+                ["history"] = "Show command history",
+                ["tabang"] = "Show available commands",
+                ["bersyon"] = "Show Ban version information",
+                ["ambot"] = "Test arguments and options"
+            };
+
+        public static IEnumerable<string> GetCommandNames()
+        {
+            return Commands.Keys;
+        }
+
+        public static bool TryGetDescription(
+            string command,
+            out string description)
+        {
+            return Descriptions.TryGetValue(command, out description!);
+        }
+
+        public static int Execute(
             string com,
             List<string> args,
             List<string> ops)
         {
-            switch (com)
+            if (string.IsNullOrWhiteSpace(com))
+                return 0;
+
+            if (Commands.TryGetValue(com, out Action<List<string>, List<string>>? command))
             {
-                case "dinako":
-                    Dinako();
-                    break;
+                try
+                {
+                    command(args, ops);
+                }
+                catch (Exception ex)
+                {
+                    ShellOutput.Error($"{com}: {ex.Message}");
+                }
 
-                case "oras":
-                    Oras();
-                    break;
-
-                case "cd":
-                    Cd(args);
-                    break;
-
-                case "himo":
-                    Himo(args);
-                    break;
-
-                case "tanaw":
-                    Tanaw(args, ops);
-                    break;
-
-                case "familytree":
-                    FamilyTree(args);
-                    break;
-
-                case "igna":
-                    Igna(args);
-                    break;
-
-                case "kopya":
-                    Kopya(args);
-                    break;
-
-                case "balhin":
-                    Balhin(args);
-                    break;
-
-                case "del":
-                    Del(args);
-                    break;
-
-                case "basaha":
-                    Basaha(args, ops);
-                    break;
-
-                case "sulat":
-                    Sulat(args);
-                    break;
-
-                case "dugang":
-                    Dugang(args);
-                    break;
-
-                case "pangita":
-                    Pangita(args, ops);
-                    break;
-
-                case "impormasyon":
-                    Impormasyon(args);
-                    break;
-
-                case "ngalan":
-                    Ngalan(args);
-                    break;
-
-                case "history":
-                    History();
-                    break;
-
-                case "tabang":
-                    Tabang(args);
-                    break;
-
-                case "bersyon":
-                    Bersyon();
-                    break;
-
-                case "ambot":
-                    Ambot(args, ops);
-                    break;
-
-                default:
-                    Console.ForegroundColor =
-                        ConsoleColor.Red;
-
-                    Console.WriteLine(
-                        $"Error: the term '{com}' is not supported."
-                    );
-
-                    Console.ResetColor();
-                    break;
+                return ShellOutput.LastExitCode;
             }
+
+            ShellOutput.Error($"Error: the term '{com}' is not supported.");
+            return ShellOutput.LastExitCode;
         }
 
         private static void Dinako()
@@ -1871,7 +1860,7 @@ namespace Essentials.Commands
         private static void History()
         {
             List<string> history =
-                Essentials.Input.editour.GetHistory();
+                Essentials.Input.Editour.GetHistory();
 
             if (history.Count == 0)
             {

@@ -1,0 +1,33 @@
+#testings
+
+set demo=ready
+
+
+pamaagi greet name -- igna Hello $name
+greet Y
+
+para<step<3>>:
+	igna panabangi=$step
+;
+
+kung $demo == ready:
+	igna kung branch selected
+kungdili:
+	igna kungdili branch selected
+;
+
+samtang False:
+	igna this body is skipped
+;
+
+try<dawbi>:
+	command-that-does-not-exist
+	catch:
+		igna catch handled the failure
+	finally:
+		igna finally cleanup completed
+	;
+;
+
+
+#syntaxing is syntaxing 

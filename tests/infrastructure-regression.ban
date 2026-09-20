@@ -1,0 +1,11 @@
+# regresyon nga pagsulay
+
+butang-baryabol sus_is_i andam
+susi $sus_is_i == andam
+
+butang-palibot AKONAJUDNI andam
+susi $env:AKONAJUDNI == andam
+
+kuha-baryabol sus_is_i
+kuha-palibot AKONAJUDNI
+igna mao nato

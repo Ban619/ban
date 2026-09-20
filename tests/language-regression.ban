@@ -1,0 +1,38 @@
+#lang-regression
+
+set test=ready
+assert $test == ready
+
+pamaagi greet name -- set greeted=$name
+greet Y
+assert $greeted == Y
+
+para<count<3>>:
+    set last=$count
+;
+assert $last == 3
+
+kung $test == ready:
+    set branch=kung
+kungdili:
+    set branch=kungdili
+;
+assert $branch == kung
+
+samtang False:
+    set unexpected=yes
+;
+assert $unexpected != yes
+
+try<dawbi>:
+    command-that-does-not-exist
+    catch:
+        set caught=yes
+    finally:
+        set cleaned=yes
+    ;
+;
+assert $caught == yes
+assert $cleaned == yes
+
+igna language-regression-passed
