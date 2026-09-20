@@ -1,1 +1,1 @@
-my custom braindead command-line sidequest shi inspired by cmd
+my custom braindead command-line sidequest shi inspired by cmd and ps1
